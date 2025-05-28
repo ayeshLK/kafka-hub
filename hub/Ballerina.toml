@@ -1,5 +1,5 @@
 [package]
-org = "example"
+org = "wso2"
 name = "kafkaHub"
 version = "0.1.0"
 
