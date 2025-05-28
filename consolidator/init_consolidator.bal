@@ -18,6 +18,8 @@ import consolidatorService.config;
 import ballerinax/kafka;
 import consolidatorService.util;
 import consolidatorService.types;
+import ballerina/log;
+import ballerina/lang.runtime;
 
 function init() returns error? {
     // Initialize consolidator-service state
@@ -28,7 +30,8 @@ function init() returns error? {
     }
 
     // start the consolidator-service
-    _ = @strand { thread: "any" } start consolidateSystemState();    
+    _ = @strand { thread: "any" } start consolidateSystemState();
+    runtime:onGracefulStop(onShutdown);
 }
 
 isolated function syncSystemState() returns error? {
@@ -54,4 +57,14 @@ isolated function syncSystemState() returns error? {
         return kafkaError;
     }
     check websubEventsSnapshotConsumer->close();
+}
+
+isolated function onShutdown() returns error? {
+    log:printInfo("Shutting down the Event consolidator service, persisting the system state");
+    error? persistError = processStateUpdate();
+    if persistError is error {
+        log:printError("Error occurred while persisting the consolidated state during shutdown, hence logging the state", 
+            state = constructStateSnapshot());
+        return persistError;
+    }
 }

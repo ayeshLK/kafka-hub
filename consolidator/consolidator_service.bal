@@ -27,10 +27,7 @@ import wso2/mi;
 
 @mi:Operation
 public isolated function getStateSnapshot() returns json {
-    types:SystemStateSnapshot stateSnapshot = {
-        topics: getTopics(),
-        subscriptions: getSubscriptions()
-    };
+    types:SystemStateSnapshot stateSnapshot = constructStateSnapshot();
     return stateSnapshot.toJson();
 }
 
@@ -81,3 +78,8 @@ isolated function processStateUpdate() returns error? {
     };
     check persist:persistWebsubEventsSnapshot(stateSnapshot);
 }
+
+isolated function constructStateSnapshot() returns types:SystemStateSnapshot => {
+    topics: getTopics(),
+    subscriptions: getSubscriptions()
+};
