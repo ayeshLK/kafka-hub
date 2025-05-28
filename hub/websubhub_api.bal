@@ -169,6 +169,7 @@ isolated function updateMessage(websubhub:UpdateMessage message)
 
 @mi:Operation
 public isolated function onSubscription(json request) returns json {
+    _ = start verifyAndValidateSubscription(request.cloneReadOnly());
     return {
         statusCode: http:STATUS_ACCEPTED,
         mediaType: mime:APPLICATION_FORM_URLENCODED,
@@ -176,7 +177,22 @@ public isolated function onSubscription(json request) returns json {
     };
 }
 
-@mi:Operation
+isolated function verifyAndValidateSubscription(json request) {
+    record {| 
+        int statusCode; 
+        string mediaType; 
+        string body;
+    |}|error validateResponse = onSubscriptionValidation(request).fromJsonWithType();
+    if validateResponse is error {
+        return;
+    }
+    if validateResponse.statusCode !is http:STATUS_ACCEPTED {
+        return;
+    }
+
+    onSubscriptionVerification(request);
+}
+
 public isolated function onSubscriptionValidation(json request) returns json {
     do {
         websubhub:Subscription subscription = check request.fromJsonWithType();
@@ -229,7 +245,6 @@ isolated function validateSubscription(websubhub:Subscription message) returns w
     }
 }
 
-@mi:Operation
 public isolated function onSubscriptionVerification(json request) {
     do {
         websubhub:Subscription subscription = check request.fromJsonWithType();
@@ -263,6 +278,7 @@ isolated function onSubscriptionIntentVerified(websubhub:VerifiedSubscription me
 
 @mi:Operation
 public isolated function onUnsubscription(json request) returns json {
+    _ = start verifyAndValidateUnsubscription(request.cloneReadOnly());
     return {
         statusCode: http:STATUS_ACCEPTED,
         mediaType: mime:APPLICATION_FORM_URLENCODED,
@@ -270,7 +286,22 @@ public isolated function onUnsubscription(json request) returns json {
     };
 }
 
-@mi:Operation
+isolated function verifyAndValidateUnsubscription(json request) {
+    record {| 
+        int statusCode; 
+        string mediaType; 
+        string body;
+    |}|error validateResponse = onUnsubscriptionValidation(request).fromJsonWithType();
+    if validateResponse is error {
+        return;
+    }
+    if validateResponse.statusCode !is http:STATUS_ACCEPTED {
+        return;
+    }
+
+    onUnsubscriptionVerification(request);
+}
+
 public isolated function onUnsubscriptionValidation(json request) returns json {
     do {
         websubhub:Unsubscription unsubscription = check request.fromJsonWithType();
@@ -324,7 +355,6 @@ isolated function validateUnsubscription(websubhub:Unsubscription message) retur
     }
 }
 
-@mi:Operation
 public isolated function onUnsubscriptionVerification(json request) {
     do {
         websubhub:Subscription subscription = check request.fromJsonWithType();
