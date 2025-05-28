@@ -1,6 +1,6 @@
 ## Using Functional API based Websubhub
 
-Websubhub functional API offers 9 APIs to invoke hub operations. Following are there usage and relevant request response formats.
+Websubhub functional API offers 5 APIs to invoke hub operations. Following are there usage and relevant request response formats.
 
 | Function Name                  | Argument Type | Argument Structure                                                                                                            | Return Type | Return Type Structure                                     |
 |-------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------|-------------|------------------------------------------------------------|
