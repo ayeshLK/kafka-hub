@@ -14,9 +14,27 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import kafkaHub.types;
+import kafkaHub.util;
+
 import ballerina/log;
+
+import wso2/mi;
 
 function init() returns error? {
     check initializeHubState();
     log:printInfo("Websubhub service started successfully");
+}
+
+@mi:Operation
+public function initHubState(json initialState) {
+    do {
+        types:SystemStateSnapshot systemStateSnapshot = check initialState.fromJsonWithType();
+        check processWebsubTopicsSnapshotState(systemStateSnapshot.topics);
+        check processWebsubSubscriptionsSnapshotState(systemStateSnapshot.subscriptions);
+        // Start hub-state update worker
+        _ = @strand {thread: "any"} start updateHubState();
+    } on fail error err {
+        util:logError("Error occurred while initializing the hub-state using the latest state-snapshot", err, severity = "FATAL");
+    }
 }
