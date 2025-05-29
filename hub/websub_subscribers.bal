@@ -85,11 +85,12 @@ isolated function pollForNewUpdates(string subscriberId, websubhub:VerifiedSubsc
     });
     do {
         while true {
-            kafka:BytesConsumerRecord[] records = check consumerEp->poll(config:POLLING_INTERVAL);
+            readonly & kafka:BytesConsumerRecord[] records = check consumerEp->poll(config:POLLING_INTERVAL);
             if !isValidConsumer(topicName, subscriberId) {
                 fail error(string `Subscriber with Id ${subscriberId} or topic ${topicName} is invalid`);
             }
-            _ = check notifySubscribers(records, clientEp, consumerEp);
+            _ = check notifySubscribers(records, clientEp);
+            check consumerEp->'commit();
         }
     } on fail var e {
         util:logError("Error occurred while sending notification to subscriber", e);
@@ -113,23 +114,30 @@ isolated function isValidSubscription(string subscriberId) returns boolean {
     }
 }
 
-isolated function notifySubscribers(kafka:BytesConsumerRecord[] records, websubhub:HubClient clientEp, kafka:Consumer consumerEp) returns error? {
+isolated function notifySubscribers(kafka:BytesConsumerRecord[] records, websubhub:HubClient clientEp) returns error? {
+    future<websubhub:ContentDistributionSuccess|error>[] distributionResponses = [];
     foreach var kafkaRecord in records {
-        var message = deSerializeKafkaRecord(kafkaRecord);
-        if message is websubhub:ContentDistributionMessage {
-            var response = clientEp->notifyContentDistribution(message);
-            if response is websubhub:ContentDistributionSuccess {
-                _ = check consumerEp->commit();
-                return;   
-            }
-            return response;
-        } else {
-            log:printError("Error occurred while retrieving message data", err = message.message());
-        }
+        websubhub:ContentDistributionMessage message = check constructContentDistMsg(kafkaRecord);
+        future<websubhub:ContentDistributionSuccess|error> distributionResponse = start clientEp->notifyContentDistribution(message.cloneReadOnly());
+        distributionResponses.push(distributionResponse);
+    }
+
+    boolean hasErrors = distributionResponses
+        .'map(f => waitAndGetResult(f))
+        .'map(r => r is error)
+        .reduce(isolated function (boolean a, boolean b) returns boolean => a && b, false);
+        
+    if hasErrors {
+        return error("Error occurred while distributing content to the subscriber");
     }
 }
 
-isolated function deSerializeKafkaRecord(kafka:BytesConsumerRecord kafkaRecord) returns websubhub:ContentDistributionMessage|error {
+isolated function waitAndGetResult(future<websubhub:ContentDistributionSuccess|error> response) returns websubhub:ContentDistributionSuccess|error {
+    websubhub:ContentDistributionSuccess|error responseValue = wait response;
+    return responseValue;
+}
+
+isolated function constructContentDistMsg(kafka:BytesConsumerRecord kafkaRecord) returns websubhub:ContentDistributionMessage|error {
     byte[] content = kafkaRecord.value;
     string message = check string:fromBytes(content);
     json payload =  check value:fromJsonString(message);
