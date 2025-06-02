@@ -62,7 +62,7 @@ function processSubscription(websubhub:VerifiedSubscription subscription) return
         log:printDebug(string `Subscriber ${subscriberId} does not belong to the current server, hence not starting the consumer`);
         return;
     }
-    if !isFreshSubscription {
+    if !isFreshSubscription && !isRenewingStaleSubscription {
         log:printDebug(string `Subscriber ${subscriberId} is already available in the 'hub', hence not starting the consumer`);
         return;
     }
@@ -151,7 +151,7 @@ isolated function notifySubscribers(kafka:BytesConsumerRecord[] records, websubh
     boolean hasErrors = distributionResponses
         .'map(f => waitAndGetResult(f))
         .'map(r => r is error)
-        .reduce(isolated function (boolean a, boolean b) returns boolean => a && b, false);
+        .reduce(isolated function (boolean a, boolean b) returns boolean => a || b, false);
         
     if hasErrors {
         return error("Error occurred while distributing content to the subscriber");
