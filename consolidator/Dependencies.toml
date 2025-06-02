@@ -5,7 +5,7 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.12.0"
+distribution-version = "2201.12.4"
 
 [[package]]
 org = "ballerina"
@@ -102,10 +102,6 @@ dependencies = [
 	{org = "ballerina", name = "observe"},
 	{org = "ballerina", name = "time"},
 	{org = "ballerina", name = "url"}
-]
-modules = [
-	{org = "ballerina", packageName = "http", moduleName = "http"},
-	{org = "ballerina", packageName = "http", moduleName = "http.httpscerr"}
 ]
 
 [[package]]
@@ -290,7 +286,7 @@ modules = [
 [[package]]
 org = "ballerina"
 name = "task"
-version = "2.9.0"
+version = "2.7.0"
 dependencies = [
 	{org = "ballerina", name = "jballerina.java"},
 	{org = "ballerina", name = "time"}
@@ -392,11 +388,10 @@ modules = [
 ]
 
 [[package]]
-org = "example"
+org = "wso2"
 name = "consolidatorService"
 version = "0.1.0"
 dependencies = [
-	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "lang.runtime"},
 	{org = "ballerina", name = "lang.string"},
 	{org = "ballerina", name = "lang.value"},
@@ -404,14 +399,23 @@ dependencies = [
 	{org = "ballerina", name = "random"},
 	{org = "ballerina", name = "websubhub"},
 	{org = "ballerinai", name = "observe"},
-	{org = "ballerinax", name = "kafka"}
+	{org = "ballerinax", name = "kafka"},
+	{org = "wso2", name = "mi"}
 ]
 modules = [
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService"},
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService.config"},
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService.connections"},
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService.persistence"},
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService.types"},
-	{org = "example", packageName = "consolidatorService", moduleName = "consolidatorService.util"}
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService"},
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService.config"},
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService.connections"},
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService.persistence"},
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService.types"},
+	{org = "wso2", packageName = "consolidatorService", moduleName = "consolidatorService.util"}
+]
+
+[[package]]
+org = "wso2"
+name = "mi"
+version = "0.3.0"
+modules = [
+	{org = "wso2", packageName = "mi", moduleName = "mi"}
 ]
 

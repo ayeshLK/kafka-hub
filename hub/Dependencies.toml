@@ -402,7 +402,7 @@ modules = [
 ]
 
 [[package]]
-org = "example"
+org = "wso2"
 name = "kafkaHub"
 version = "0.1.0"
 dependencies = [
@@ -421,13 +421,13 @@ dependencies = [
 	{org = "wso2", name = "mi"}
 ]
 modules = [
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.config"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.connections"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.persistence"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.security"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.types"},
-	{org = "example", packageName = "kafkaHub", moduleName = "kafkaHub.util"}
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.config"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.connections"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.persistence"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.security"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.types"},
+	{org = "wso2", packageName = "kafkaHub", moduleName = "kafkaHub.util"}
 ]
 
 [[package]]

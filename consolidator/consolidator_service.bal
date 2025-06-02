@@ -14,25 +14,22 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerinax/kafka;
-import ballerina/lang.value;
-import ballerina/log;
 import consolidatorService.config;
 import consolidatorService.connections as conn;
 import consolidatorService.persistence as persist;
-import ballerina/http;
 import consolidatorService.types;
 
-http:Service consolidatorService = service object {
-    isolated resource function get state\-snapshot() returns types:SystemStateSnapshot {
-        types:SystemStateSnapshot stateSnapshot = {
-            topics: getTopics(),
-            subscriptions: getSubscriptions()
-        };
-        log:printInfo("Request received to retrieve state-snapshot, hence responding with the current state-snapshot", state = stateSnapshot);
-        return stateSnapshot;
-    }
-};
+import ballerina/lang.value;
+import ballerina/log;
+import ballerinax/kafka;
+
+import wso2/mi;
+
+@mi:Operation
+public isolated function getStateSnapshot() returns json {
+    types:SystemStateSnapshot stateSnapshot = constructStateSnapshot();
+    return stateSnapshot.toJson();
+}
 
 isolated function consolidateSystemState() returns error? {
     do {
@@ -81,3 +78,8 @@ isolated function processStateUpdate() returns error? {
     };
     check persist:persistWebsubEventsSnapshot(stateSnapshot);
 }
+
+isolated function constructStateSnapshot() returns types:SystemStateSnapshot => {
+    topics: getTopics(),
+    subscriptions: getSubscriptions()
+};

@@ -14,15 +14,14 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/log;
 import consolidatorService.config;
-import ballerina/lang.runtime;
-import ballerina/http;
 import ballerinax/kafka;
 import consolidatorService.util;
 import consolidatorService.types;
+import ballerina/log;
+import ballerina/lang.runtime;
 
-public function main() returns error? {
+function init() returns error? {
     // Initialize consolidator-service state
     error? stateSyncResult = syncSystemState();
     if stateSyncResult is error {
@@ -30,19 +29,9 @@ public function main() returns error? {
         return;
     }
 
-    // Start the HTTP endpoint
-    http:Listener httpListener = check new (config:CONSOLIDATOR_HTTP_ENDPOINT_PORT);
-    runtime:registerListener(httpListener);
-    check httpListener.attach(consolidatorService, "/consolidator");
-    check httpListener.attach(healthCheckService, "/health");
-    check httpListener.'start();
-    log:printInfo("Starting Event Consolidator Service");
-
     // start the consolidator-service
     _ = @strand { thread: "any" } start consolidateSystemState();
-    lock {
-        startupCompleted = true;
-    }
+    runtime:onGracefulStop(onShutdown);
 }
 
 isolated function syncSystemState() returns error? {
@@ -68,4 +57,14 @@ isolated function syncSystemState() returns error? {
         return kafkaError;
     }
     check websubEventsSnapshotConsumer->close();
+}
+
+isolated function onShutdown() returns error? {
+    log:printInfo("Shutting down the Event consolidator service, persisting the system state");
+    error? persistError = processStateUpdate();
+    if persistError is error {
+        log:printError("Error occurred while persisting the consolidated state during shutdown, hence logging the state", 
+            state = constructStateSnapshot());
+        return persistError;
+    }
 }
