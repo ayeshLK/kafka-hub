@@ -238,10 +238,15 @@ isolated function validateSubscription(websubhub:Subscription message) returns w
                 string `Topic [${message.hubTopic}] is not registered with the Hub`, statusCode = http:STATUS_NOT_ACCEPTABLE);
     } else {
         string subscriberId = util:generateSubscriberId(message.hubTopic, message.hubCallback);
-        if isValidSubscription(subscriberId) {
-            return error websubhub:SubscriptionDeniedError(
-                "Subscriber has already registered with the Hub", statusCode = http:STATUS_NOT_ACCEPTABLE);
+        websubhub:VerifiedSubscription? subscription = getSubscription(subscriberId);
+        if subscription is () {
+            return;
         }
+        if subscription.hasKey(STATUS) && subscription.get(STATUS) is STALE_STATE {
+            return;
+        }
+        return error websubhub:SubscriptionDeniedError(
+            "Subscriber has already registered with the Hub", statusCode = http:STATUS_NOT_ACCEPTABLE);
     }
 }
 
@@ -265,15 +270,27 @@ public isolated function onSubscriptionVerification(json request) {
 }
 
 isolated function onSubscriptionIntentVerified(websubhub:VerifiedSubscription message) {
+    websubhub:VerifiedSubscription subscription = prepareSubscriptionToBePersisted(message);
+    error? persistingResult = persist:addSubscription(subscription.cloneReadOnly());
+    if persistingResult is error {
+        util:logError("Error occurred while persisting the subscription", persistingResult);
+    }
+}
+
+isolated function prepareSubscriptionToBePersisted(websubhub:VerifiedSubscription message) returns websubhub:VerifiedSubscription {
+    string subscriberId = util:generateSubscriberId(message.hubTopic, message.hubCallback);
+    websubhub:VerifiedSubscription? subscription = getSubscription(subscriberId);
+    // if we have a stale subscription, remove the `status` flag from the subscription and persist it again
+    if subscription is websubhub:Subscription {
+        _ = subscription.removeIfHasKey(STATUS);
+        return subscription;
+    }
     if !message.hasKey(CONSUMER_GROUP) {
         string consumerGroup = util:generateGroupName(message.hubTopic, message.hubCallback);
         message[CONSUMER_GROUP] = consumerGroup;
     }
     message[SERVER_ID] = config:SERVER_ID;
-    error? persistingResult = persist:addSubscription(message.cloneReadOnly());
-    if persistingResult is error {
-        util:logError("Error occurred while persisting the subscription", persistingResult);
-    }
+    return message;
 }
 
 @mi:Operation
